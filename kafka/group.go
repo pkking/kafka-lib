@@ -141,7 +141,7 @@ func (s *subscriber) start(handler eventHandler) error {
 
 		for {
 			if err := s.cg.Consume(ctx, s.topics, &gc); err != nil {
-				log.Errorf("Consume err: %s", err.Error())
+				log.Errorf("Consume topics:%v err: %s", s.topics, err.Error())
 
 				return
 			}
