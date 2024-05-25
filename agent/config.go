@@ -15,6 +15,7 @@ type Config struct {
 	Address        string `json:"address" required:"true"`
 	Version        string `json:"version"` // e.g 2.1.0
 	MQCert         string `json:"mq_cert"`
+	OTEL           bool   `json:"otel"` // Whether otel tracing is enabled
 	Username       string `json:"user_name"`
 	Password       string `json:"password"`
 	Algorithm      string `json:"algorithm"`

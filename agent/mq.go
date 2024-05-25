@@ -54,12 +54,14 @@ func Init(cfg *Config, log mq.Logger, redis Redis, queueName string, removeCert 
 			mq.Secure(true),
 			mq.SetTLSConfig(tlsConfig),
 			mq.Sasl(cfg.Username, cfg.Password, cfg.Algorithm),
+			mq.Otel(cfg.OTEL),
 		)
 	} else {
 		v = kafka.NewMQ(
 			mq.Addresses(cfg.mqConfig().Addresses...),
 			mq.Version(cfg.parseVersion()),
 			mq.Log(log),
+			mq.Otel(cfg.OTEL),
 		)
 	}
 

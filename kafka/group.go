@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/IBM/sarama"
+	"github.com/dnwe/otelsarama"
 	"github.com/opensourceways/server-common-lib/utils"
 
 	"github.com/opensourceways/kafka-lib/mq"
@@ -132,15 +133,22 @@ func (s *subscriber) start(handler eventHandler) error {
 
 		log := s.mqOpts.Log
 
-		gc := groupConsumer{
+		var gc sarama.ConsumerGroupHandler
+
+		gc = &groupConsumer{
 			mqOpts:      s.mqOpts,
 			subOpts:     &s.subOpts,
 			handler:     handler,
 			notifyReady: s.notifyReady,
 		}
 
+		if s.mqOpts.Otel {
+			log.Infof("otel comsumer wrapper enabled for %v", s.topics)
+			gc = otelsarama.WrapConsumerGroupHandler(gc)
+		}
+
 		for {
-			if err := s.cg.Consume(ctx, s.topics, &gc); err != nil {
+			if err := s.cg.Consume(ctx, s.topics, gc); err != nil {
 				log.Errorf("Consume topics:%v err: %s", s.topics, err.Error())
 
 				return

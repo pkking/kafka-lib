@@ -56,6 +56,8 @@ type Options struct {
 	Context context.Context
 
 	Log Logger
+	// Whether otel tracing is enabled
+	Otel bool
 }
 
 type Option func(*Options)
@@ -132,6 +134,12 @@ func Log(log Logger) Option {
 		if log != nil {
 			o.Log = log
 		}
+	}
+}
+
+func Otel(b bool) Option {
+	return func(o *Options) {
+		o.Otel = b
 	}
 }
 

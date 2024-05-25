@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/IBM/sarama"
+	"github.com/dnwe/otelsarama"
 	"github.com/google/uuid"
 
 	"github.com/opensourceways/kafka-lib/mq"
@@ -87,9 +88,15 @@ func (impl *kfkMQ) Connect() error {
 		return err
 	}
 
+	if impl.opts.Otel {
+		impl.opts.Log.Info("otel producer enabled")
+		producer = otelsarama.WrapSyncProducer(impl.clusterConfig(), producer)
+	}
+
 	impl.producer = producer
 	impl.connected = true
 
+	impl.opts.Log.Info("kafka connected")
 	return nil
 }
 
