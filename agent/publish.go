@@ -20,17 +20,17 @@ func newPublisher(redis Redis, log mq.Logger, queueName string) {
 	}
 }
 
-func Publish(topic string, header map[string]string, msg []byte) error {
+func Publish(topic string, header map[string]string, msg []byte, opts ...mq.PublishOption) error {
 	v := &mq.Message{
 		Header: header,
 		Body:   msg,
 	}
 
 	if publisher != nil {
-		return publisher.publish(topic, v)
+		return publisher.publish(topic, v, opts...)
 	}
 
-	return mqInstance.Publish(topic, v)
+	return mqInstance.Publish(topic, v, opts...)
 }
 
 // queue
@@ -48,8 +48,8 @@ type publisherImpl struct {
 	stopped chan struct{}
 }
 
-func (impl *publisherImpl) publish(topic string, msg *mq.Message) error {
-	if err := mqInstance.Publish(topic, msg); err == nil {
+func (impl *publisherImpl) publish(topic string, msg *mq.Message, opts ...mq.PublishOption) error {
+	if err := mqInstance.Publish(topic, msg, opts...); err == nil {
 		return nil
 	}
 

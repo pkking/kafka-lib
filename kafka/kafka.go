@@ -5,11 +5,12 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/opensourceways/kafka-lib/mq"
+
 	"github.com/IBM/sarama"
 	"github.com/dnwe/otelsarama"
 	"github.com/google/uuid"
-
-	"github.com/opensourceways/kafka-lib/mq"
+	"go.opentelemetry.io/otel"
 )
 
 type kfkMQ struct {
@@ -119,6 +120,14 @@ func (impl *kfkMQ) Disconnect() error {
 
 // Publish a message to a topic in the kafka cluster.
 func (impl *kfkMQ) Publish(topic string, msg *mq.Message, opts ...mq.PublishOption) error {
+	opt := mq.PublishOptions{}
+	for _, o := range opts {
+		o(&opt)
+	}
+	if opt.Context == nil {
+		opt.Context = context.Background()
+	}
+
 	d, err := impl.opts.Codec.Marshal(msg)
 	if err != nil {
 		return err
@@ -131,6 +140,13 @@ func (impl *kfkMQ) Publish(topic string, msg *mq.Message, opts ...mq.PublishOpti
 
 	if key := msg.MessageKey(); key != "" {
 		pm.Key = sarama.StringEncoder(key)
+	}
+
+	if opt.Context != nil && impl.opts.Otel {
+		propagator := otel.GetTextMapPropagator()
+		if propagator != nil {
+			propagator.Inject(opt.Context, otelsarama.NewProducerMessageCarrier(pm))
+		}
 	}
 
 	_, _, err = impl.producer.SendMessage(pm)
